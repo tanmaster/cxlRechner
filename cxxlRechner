@@ -1,0 +1,222 @@
+<!--
+	COPYBRIHGT TAN CÜXXL
+	MIT LICNESNE
+
+	Copyright 2018 TAN YÜCEL
+	Permission is hereby granted, free of charge, to any person obtaining a copy
+	of this software and associated documentation files (the "Software"), to deal
+	in the Software without restriction, including without limitation the rights
+	to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+	copies of the Software, and to permit persons to whom the Software is
+	furnished to do so, subject to the following conditions:
+
+	The above copyright notice and this permission notice shall be included in all
+	copies or substantial portions of the Software.
+
+	THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+	IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+	FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+	AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+	LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+	OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+	SOFTWARE.
+-->
+
+
+<html>
+	<head>
+		<title>
+			cuxxlRechner
+		</title>
+		<script type ="text/javascript">
+
+			var i = 0;
+
+			function init(){
+				addInput();
+			}
+
+			function addInput(){
+				i++;
+				var local = i
+				var forms = document.getElementById("forms");
+				var div = forms.appendChild(document.createElement('div'));
+				div.id = local
+
+				var nameField = div.appendChild(document.createElement('input'));
+				nameField.placeholder = "Name";
+
+				var valueField = div.appendChild(document.createElement('input'));
+				valueField.placeholder = "Value";
+
+				var removeButton = div.appendChild(document.createElement('button'));
+				removeButton.type = "button";
+				removeButton.onclick = function() {
+					console.log("remove id: " + local)
+					document.getElementById((local)).remove();
+				}
+				removeButton.innerHTML = "Remove";
+
+
+			}
+
+			function calculate(){
+				var forms = document.getElementById("forms");
+
+				//this will store the people
+				var persons = new Array();
+
+				for (var i = forms.childNodes.length - 1; i > 0 ; i--){
+					currentValue = forms.childNodes[i];
+					console.log(currentValue);
+
+					if (currentValue.childNodes[0].value == ""){
+						currentValue.childNodes[2].click();
+						continue;
+					}
+
+					var person = {
+						//id: currentValue.id,
+						name: currentValue.childNodes[0].value,
+						paid: isNaN(Number.parseFloat(currentValue.childNodes[1].value)) ? 0 : Number.parseFloat(currentValue.childNodes[1].value),
+						owes: {}
+					};
+
+					persons.push(person);
+				}
+
+
+				console.log(persons);
+				persons.reverse();
+
+				var totalCost = 0;
+				persons.forEach(function(person) {
+					totalCost += person.paid;
+				});
+
+				console.log(totalCost);
+				var costPerPersons = new Array();
+
+				persons.forEach(function(person) {
+					costPerPersons.push((person.paid - totalCost/persons.length));
+				});
+
+
+				for (var negIndex = 0; negIndex < costPerPersons.length; negIndex++) {
+					if (costPerPersons[negIndex] < 0){
+
+						for (var posIndex = 0; posIndex < costPerPersons.length; posIndex++) {
+							if (costPerPersons[posIndex] > 0){
+								if (Math.abs(costPerPersons[negIndex]) <= Math.abs(costPerPersons[posIndex])){
+									persons[negIndex].owes[posIndex] =  Math.abs(costPerPersons[negIndex]);
+									costPerPersons[posIndex] += costPerPersons[negIndex];
+									costPerPersons[negIndex] = 0;
+								} else {
+									persons[negIndex].owes[posIndex] =  costPerPersons[posIndex];
+									costPerPersons[negIndex] += costPerPersons[posIndex];
+									costPerPersons[posIndex] = 0;
+								}
+							}
+						}
+					}
+				}
+
+
+				var result = document.getElementById("result");
+				result.innerHTML = "</br>";
+				persons.forEach(function(person) {
+
+					var keys = Object.keys(person.owes);
+
+					if (keys.length == 0) {
+						return;
+					}
+
+					result.innerHTML += person.name + " owes: </br>";
+
+
+					keys.forEach(function(key) {
+						if (person.owes[key] > 0){
+							result.innerHTML += "       " + person.owes[key] + " -> " +  persons[key].name + " </br>";
+						}
+
+					});
+
+
+					console.log(person.owes);
+					result.innerHTML += "</br>";
+
+				});
+
+				console.log(persons);
+
+			}
+
+
+		</script>
+		<style>
+			body {
+				position: relative;
+				background-color: #0f0f0f;
+				color: white;
+				text-align: center;
+				margin: auto;
+				padding: 10px;
+				font-family: Helvetica neue;
+			}
+
+			input{
+				border-radius: 10px;
+				background-color: #111111;
+				color:white;
+				margin: 5px;
+				height: 30px;
+				width: 200px;
+				text-align: center;
+				font-size: 15px;
+			}
+
+			input:hover {
+				background-color: #222222;
+
+			}
+
+			button {
+				border-radius: 10px;
+				height: 30px;
+				font-size: 15px;
+
+			}
+			button:hover{
+				background-color: #dddddd;
+
+			}
+
+			body>button {
+				width: 240px;
+
+			}
+
+
+		</style>
+	</head>
+
+	<body onload ="init();" id="body">
+		<p>
+			Tired of not knowing who owes what to whom after making group purchases?<br>
+			Search no more! Use this tool to calculate everbody's fair share!
+		</p>
+
+		<div id = "forms">
+
+		</div>
+		<br><br>
+		<button type="button" onclick="addInput()">Add</button>
+		<button type="button" onclick="calculate()">Calculate</button>
+
+		<div id="result">
+
+		</div>
+	</body>
+
+</html>
