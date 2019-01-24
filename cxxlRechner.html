@@ -1,6 +1,7 @@
+
 <!--
 	
-	Copyright 2018 TAN YÜCEL
+	Copyright 2018 TAN YÃœCEL
 	Permission is hereby granted, free of charge, to any person obtaining a copy
 	of this software and associated documentation files (the "Software"), to deal
 	in the Software without restriction, including without limitation the rights
@@ -23,9 +24,21 @@
 
 <html>
 	<head>
+		<meta name="google-site-verification" content="RAq1J0ijd8CBEKZkhZxn0WDL6ZAoJblmxkht4VvSvU4" />
+		<meta name="viewport" content="width=device-width, initial-scale=1.0">
+		<link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
+		<link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
+		<link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
+		<link rel="manifest" href="/site.webmanifest">
+		<link rel="mask-icon" href="/safari-pinned-tab.svg" color="#5bbad5">
+		<meta name="msapplication-TileColor" content="#da532c">
+		<meta name="theme-color" content="#ffffff">
+
 		<title>
-			cuxxlRechner
+			cuxxlRechner - Calculate equal shares in group purchases.
 		</title>
+		<meta name="description" content="Tired of not knowing who owes what to whom after making group purchases?Search no more! Use this tool to calculate everbody's fair share!"/>
+
 		<script type ="text/javascript">
 
 			var i = 0;
@@ -45,7 +58,7 @@
 				nameField.placeholder = "Name";
 
 				var valueField = div.appendChild(document.createElement('input'));
-				valueField.placeholder = "Value";
+				valueField.placeholder = "Amount";
 
 				var removeButton = div.appendChild(document.createElement('button'));
 				removeButton.type = "button";
@@ -200,9 +213,13 @@
 	</head>
 
 	<body onload ="init();" id="body">
+		<h1>cuxxlRechner</h1>
+
 		<p>
 			Tired of not knowing who owes what to whom after making group purchases?<br>
-			Search no more! Use this tool to calculate everbody's fair share!
+			Search no more! Use this tool to calculate everbody's fair share!<br><br>
+			Usage: Enter the name and the amount of money this person has spent into the corresponding fields.<br>
+			 Click add if you need to add another person. After clicking on Calculate, the site will tell you which person owes how much to whom.
 		</p>
 
 		<div id = "forms">
