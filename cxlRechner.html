@@ -1,4 +1,3 @@
-
 <!--
 	
 	Copyright 2018 TAN YÜCEL
@@ -23,215 +22,237 @@
 
 
 <html>
-	<head>
-		<meta name="google-site-verification" content="RAq1J0ijd8CBEKZkhZxn0WDL6ZAoJblmxkht4VvSvU4" />
-		<meta name="viewport" content="width=device-width, initial-scale=1.0">
-		<link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
-		<link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
-		<link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
-		<link rel="manifest" href="/site.webmanifest">
-		<link rel="mask-icon" href="/safari-pinned-tab.svg" color="#5bbad5">
-		<meta name="msapplication-TileColor" content="#da532c">
-		<meta name="theme-color" content="#ffffff">
+<head>
+  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css"
+        integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous">
+  <meta name="google-site-verification" content="RAq1J0ijd8CBEKZkhZxn0WDL6ZAoJblmxkht4VvSvU4"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
+  <link rel="manifest" href="/site.webmanifest">
+  <link rel="mask-icon" href="/safari-pinned-tab.svg" color="#5bbad5">
+  <meta name="msapplication-TileColor" content="#da532c">
+  <meta name="theme-color" content="#ffffff">
+  
+  <title>
+    cxlRechner - Calculate equal shares in group purchases.
+  </title>
+  <meta name="description"
+        content="Tired of not knowing who owes what to whom after making group purchases?Search no more! Use this tool to calculate everbody's fair share!"/>
+  
+  <script type="text/javascript">
+    
+    let i = 0;
+    
+    function init() {
+      addInput();
+    }
+    
+    function addInput() {
+      i++;
+      const local = i;
+      const forms = document.getElementById("forms");
+      const parentDiv = forms.appendChild(document.createElement('div'));
+      parentDiv.id = local
+      parentDiv.style = "display: inline-flex;"
+      const childDiv = parentDiv.appendChild(document.createElement('div'));
+      childDiv.className = "input-group mb-2"
+      const nameField = childDiv.appendChild(document.createElement('input'));
+      nameField.className = "form-control col-md-6";
+      nameField.placeholder = "Name";
+      
+      const valueField = childDiv.appendChild(document.createElement('input'));
+      valueField.className = "form-control col-md-6";
+      valueField.type = "number";
+      valueField.placeholder = "Amount";
+      
+      const removeButton = parentDiv.appendChild(document.createElement('button'));
+      removeButton.className = "btn btn-danger"
+      removeButton.type = "button";
+      removeButton.style = "margin-bottom: .5rem !important;"
+      removeButton.onclick = () => document.getElementById((local)).remove();
+      removeButton.innerHTML = "Remove";
+      parentDiv.appendChild(document.createElement('br'));
+      
+    }
+    
+    function calculate() {
+      const forms = document.getElementById("forms");
+      
+      const persons = [];
+      
+      for (let i = forms.childNodes.length; i > 0; i--) {
+        
+        // kinda scuffed but i'm too lazy to change it
+        let name = forms.childNodes[i - 1].childNodes[0].childNodes[0].value;
+        let amount = forms.childNodes[i - 1].childNodes[0].childNodes[1].value;
+        let remove = forms.childNodes[i - 1].childNodes[1];
+        
+        // if name field is empty we skip this row
+        if (name === "") {
+          remove.click();
+          continue;
+        }
+        
+        const person = {
+          name: name,
+          paid: isNaN(Number.parseFloat(amount)) ? 0 : Number.parseFloat(amount),
+          owes: {}
+        };
+        
+        persons.push(person);
+      }
+      
+      
+      persons.reverse();
+      
+      let totalCost = 0;
+      const costPerPersons = [];
+      
+      // calculate sum of group expense
+      persons.forEach(person => totalCost += person.paid);
+      
+      // for each person store how much they paid minus the average cost
+      // positive amount means the person does not need to pay anyone
+      // negative amount means the person owes money to the group
+      persons.forEach(person => costPerPersons.push((person.paid - totalCost / persons.length)));
+      
+      
+      for (let j = 0; j < costPerPersons.length; j++) {
+        // if this person owes money to the group...
+        if (costPerPersons[j] < 0) {
+          
+          for (let k = 0; k < costPerPersons.length; k++) {
+            //...we need to find someone who the group owes money to
+            if (costPerPersons[k] > 0) {
+              // if j owes to the group less than what is owed to k:
+              if (Math.abs(costPerPersons[j]) <= costPerPersons[k]) {
+                persons[j].owes[k] = Math.abs(costPerPersons[j]);
+                costPerPersons[k] += costPerPersons[j];
+                costPerPersons[j] = 0;
+                // if j's debt is at 0 we need to find a new j with debt so we can break the k loop
+                break;
+              } else {
+                persons[j].owes[k] = costPerPersons[k];
+                costPerPersons[j] += costPerPersons[k];
+                // if k got back their money we need to find a new k that j sends his remainder to, so we dont break
+                costPerPersons[k] = 0;
+              }
+            }
+          }
+        }
+      }
+      
+      
+      const result = document.getElementById("result");
+      result.innerHTML = "<br/>";
+      persons.forEach(function (person) {
+        
+        const keys = Object.keys(person.owes);
+        
+        if (keys.length === 0) {
+          return;
+        }
+        
+        result.innerHTML += "<b>" + person.name + "</b> owes: <br/>";
+        
+        keys.forEach(function (key) {
+          if (person.owes[key] > 0) {
+            result.innerHTML += "       " + persons[key].name + ": " + person.owes[key].toFixed(2) + " <br/>";
+          }
+        });
+        
+        result.innerHTML += "<br/>";
+      });
+      result.innerHTML += "<p>This way, everyone has paid <b>" + (totalCost / persons.length).toFixed(2) + "</b>!</p><br/><br/><br/>"
+    }
+  
+  
+  </script>
+  <style>
+    html {
+      background-image: linear-gradient(#ffffff, #6f7272);
+    }
+    
+    html {
+      display: flex;
+      min-height: 100%;
+    }
+    
+    @media only screen and  (max-width: 1150px) {
+      body {
+        margin: calc(20vw - 70px) auto calc(20vw - 70px) auto;
+      }
+    }
+    
+    @media only screen and  (min-width: 1151px) {
+      body {
+        margin: 10em auto 6em auto;
+      }
+    }
+    
+    body {
+      position: relative;
+      background: rgb(0, 0, 0);
+      color: white;
+      text-align: center;
+      padding: 10px;
+      max-width: 41em;
+      width: 35vw;
+      min-width: 20em;
+      border-radius: calc(60vw - 200px);
+      box-shadow: 0 0 50px 10px rgba(0, 0, 0, 0.9);
+    }
+    
+    p {
+      margin: auto;
+      width: 18em;
+    }
+    
+    #forms {
+      max-width: 18em;
+      margin: auto;
+    }
+    
+    #forms > div {
+      margin-top: .3em;
+    }
+    
+    #forms > div > div {
+      margin-right: .2em;
+    }
+  
+  </style>
+</head>
 
-		<title>
-			cxlRechner - Calculate equal shares in group purchases.
-		</title>
-		<meta name="description" content="Tired of not knowing who owes what to whom after making group purchases?Search no more! Use this tool to calculate everbody's fair share!"/>
+<body onload="init();" id="body">
+<br/>
+<header>
+  <h1>cxlRechner</h1>
+</header>
+<br/>
+<p>
+  Tired of not knowing who owes what to whom after making group purchases?
+  Search no more! Use this tool to calculate everbody's fair share!<br><br>
+  Enter the name and the amount of money this person has spent into the corresponding fields.
+  After clicking on <i>Calculate</i>, the site will tell you which person owes how much to whom.
+</p>
+<br/>
+<br/>
+<div id="forms"></div>
+<br/>
+<br/>
 
-		<script type ="text/javascript">
+<button type="button" class="btn btn-light" onclick="addInput()">Add Person</button>
+<button type="button" class="btn btn-primary" onclick="calculate()">Calculate</button>
 
-			var i = 0;
-
-			function init(){
-				addInput();
-			}
-
-			function addInput(){
-				i++;
-				var local = i
-				var forms = document.getElementById("forms");
-				var div = forms.appendChild(document.createElement('div'));
-				div.id = local
-
-				var nameField = div.appendChild(document.createElement('input'));
-				nameField.placeholder = "Name";
-
-				var valueField = div.appendChild(document.createElement('input'));
-				valueField.placeholder = "Amount";
-
-				var removeButton = div.appendChild(document.createElement('button'));
-				removeButton.type = "button";
-				removeButton.onclick = function() {
-					console.log("remove id: " + local)
-					document.getElementById((local)).remove();
-				}
-				removeButton.innerHTML = "Remove";
-
-
-			}
-
-			function calculate(){
-				var forms = document.getElementById("forms");
-
-				//this will store the people
-				var persons = new Array();
-
-				for (var i = forms.childNodes.length - 1; i > 0 ; i--){
-					currentValue = forms.childNodes[i];
-					console.log(currentValue);
-
-					if (currentValue.childNodes[0].value == ""){
-						currentValue.childNodes[2].click();
-						continue;
-					}
-
-					var person = {
-						//id: currentValue.id,
-						name: currentValue.childNodes[0].value,
-						paid: isNaN(Number.parseFloat(currentValue.childNodes[1].value)) ? 0 : Number.parseFloat(currentValue.childNodes[1].value),
-						owes: {}
-					};
-
-					persons.push(person);
-				}
-
-
-				console.log(persons);
-				persons.reverse();
-
-				var totalCost = 0;
-				persons.forEach(function(person) {
-					totalCost += person.paid;
-				});
-
-				console.log(totalCost);
-				var costPerPersons = new Array();
-
-				persons.forEach(function(person) {
-					costPerPersons.push((person.paid - totalCost/persons.length));
-				});
-
-
-				for (var negIndex = 0; negIndex < costPerPersons.length; negIndex++) {
-					if (costPerPersons[negIndex] < 0){
-
-						for (var posIndex = 0; posIndex < costPerPersons.length; posIndex++) {
-							if (costPerPersons[posIndex] > 0){
-								if (Math.abs(costPerPersons[negIndex]) <= Math.abs(costPerPersons[posIndex])){
-									persons[negIndex].owes[posIndex] =  Math.abs(costPerPersons[negIndex]);
-									costPerPersons[posIndex] += costPerPersons[negIndex];
-									costPerPersons[negIndex] = 0;
-								} else {
-									persons[negIndex].owes[posIndex] =  costPerPersons[posIndex];
-									costPerPersons[negIndex] += costPerPersons[posIndex];
-									costPerPersons[posIndex] = 0;
-								}
-							}
-						}
-					}
-				}
-
-
-				var result = document.getElementById("result");
-				result.innerHTML = "</br>";
-				persons.forEach(function(person) {
-
-					var keys = Object.keys(person.owes);
-
-					if (keys.length == 0) {
-						return;
-					}
-
-					result.innerHTML += person.name + " owes: </br>";
-
-
-					keys.forEach(function(key) {
-						if (person.owes[key] > 0){
-							result.innerHTML += "       " + person.owes[key] + " -> " +  persons[key].name + " </br>";
-						}
-
-					});
-
-
-					console.log(person.owes);
-					result.innerHTML += "</br>";
-
-				});
-
-				console.log(persons);
-
-			}
-
-
-		</script>
-		<style>
-			body {
-				position: relative;
-				background-color: #0f0f0f;
-				color: white;
-				text-align: center;
-				margin: auto;
-				padding: 10px;
-				font-family: Helvetica neue;
-			}
-
-			input{
-				border-radius: 10px;
-				background-color: #dddddd;
-				margin: 5px;
-				height: 30px;
-				width: 200px;
-				text-align: center;
-				font-size: 15px;
-				color: black;
-			}
-
-			input:hover {
-				background-color: #ffffff;
-
-			}
-
-			button {
-				border-radius: 10px;
-				height: 30px;
-				font-size: 15px;
-				background-color: #ffffff;
-			}
-			button:hover{
-				background-color: #dddddd;
-
-			}
-
-			body>button {
-				width: 240px;
-
-			}
-
-
-		</style>
-	</head>
-
-	<body onload ="init();" id="body">
-		<h1>cxlRechner</h1>
-
-		<p>
-			Tired of not knowing who owes what to whom after making group purchases?<br>
-			Search no more! Use this tool to calculate everbody's fair share!<br><br>
-			Usage: Enter the name and the amount of money this person has spent into the corresponding fields.<br>
-			 Click add if you need to add another person. After clicking on Calculate, the site will tell you which person owes how much to whom.
-		</p>
-
-		<div id = "forms">
-
-		</div>
-		<br><br>
-		<button type="button" onclick="addInput()">Add</button>
-		<button type="button" onclick="calculate()">Calculate</button>
-
-		<div id="result">
-
-		</div>
-	</body>
+<div id="result">
+  <br/>
+  <br/>
+  <br/>
+  <br/>
+</div>
+</body>
 
 </html>
